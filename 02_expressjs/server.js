@@ -5,11 +5,19 @@ const port = 3000;
 const router = express.Router();
 
 app.use(express.json());
+
+app.use((req, res, next) =>  {
+    const timestamp = new Date().toISOString();
+    console.log(`${timestamp} - ${req.method} ${req.url}`);
+    next();
+});
 let cars = [
     {id : 1, make : "Toyota", model : "Camry", year : 2020, price : 25000},
     {id : 2, make : "Tesla", model : "Model S", year : 2023, price : 80000},
     {id : 3, make : "Toyota", model : "Camry", year : 2020, price : 25000},
 ]
+
+ 
 
 app.get("/", (req, res) => {
     res.send("Hello from the cars api");
@@ -49,13 +57,35 @@ router.post("/", (req, res) => {
 });
 
 router.put ("/", (req, res) => {
-    res.send("Update the car");
+    const id = Number(req.params.id);
+    const index = cars.findIndex(c => c.id == id);
+
+    if(index == -1) {
+        return resstatus(404).json({error : "Car not found"});
+    }
+
+    const {make, model, year, price} = req.body;
+
+    if(make) cars [index].make = make;
+    if(model) cars [index].model = model;
+    if(year) cars [index].year = year;
+    if(price) cars [index].price = Number(price);
+
+    res.json(cars[index]);
+
 });
 
 router.delete("/", (req, res) => {
-    res.send("Delete Car");
-});
+    const id = Number(req.params.id);
+    const index = cars.findIndex(c => c.id == id);
 
+    if(index == -1) {
+        return res.status(404).json({error : "Car not fouund"});
+    }
+
+    const deleted = cars.splice(index, 1)[0];
+    res.json({message : "Car deleted successfully", car: deleted});
+});
 
 app.use('/api/v1/cars', router);
 
